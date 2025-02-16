@@ -99,6 +99,4 @@ This project is licensed under the MIT License. Feel free to modify and share it
 ✅ **Bot functionality overview**  
 ✅ **Installation instructions** (Go and Docker)  
 ✅ **Example `config.json`**  
-✅ **Troubleshooting and updating channels**  
-
-Now you can upload your bot to GitHub! 🚀🔥
+✅ **Troubleshooting and updating channels**
