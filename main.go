@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -11,13 +10,14 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/go-yaml/yaml"
 )
 
 type Config struct {
-	TelegramToken string   `json:"telegram_token"`
-	ChatID        string   `json:"chat_id"`
-	YouTubeAPIKey string   `json:"youtube_api_key"`
-	Channels      []string `json:"channels"`
+	TelegramToken string   `yaml:"telegram_token"`
+	ChatID        string   `yaml:"chat_id"`
+	YouTubeAPIKey string   `yaml:"youtube_api_key"`
+	Channels      []string `yaml:"channels"`
 }
 
 type YouTubeResponse struct {
@@ -36,30 +36,35 @@ var (
 	lastVideos map[string]string
 )
 
+const (
+	configFile     = "config.yml"
+	lastVideosFile = "last_videos.json"
+)
+
 func loadConfig(filename string) (*Config, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
 	var cfg Config
-	err = json.Unmarshal(data, &cfg)
+	err = yaml.Unmarshal(data, &cfg)
 	if err != nil {
 		return nil, err
 	}
-	log.Println("📄 Załadowano nową konfigurację.")
+	log.Println("📄 Loaded new configuration.")
 	return &cfg, nil
 }
 
 func watchConfig(filename string) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.Fatal("Błąd tworzenia watcher'a:", err)
+		log.Fatal("Error creating watcher:", err)
 	}
 	defer watcher.Close()
 
 	err = watcher.Add(filename)
 	if err != nil {
-		log.Fatal("Nie można obserwować pliku:", err)
+		log.Fatal("Cannot watch file:", err)
 	}
 
 	for {
@@ -69,20 +74,20 @@ func watchConfig(filename string) {
 				return
 			}
 			if event.Op&fsnotify.Write == fsnotify.Write {
-				log.Println("🔄 Wykryto zmianę w pliku config.json, ponowne wczytywanie...")
+				log.Println("🔄 Detected changes in config.yml, reloading...")
 				newConfig, err := loadConfig(filename)
 				if err != nil {
-					log.Println("Błąd odczytu nowej konfiguracji:", err)
+					log.Println("Error reading new configuration:", err)
 					continue
 				}
-				config = newConfig // Aktualizacja konfiguracji
+				config = newConfig
 			}
 
 		case err, ok := <-watcher.Errors:
 			if !ok {
 				return
 			}
-			log.Println("Błąd obserwowania pliku:", err)
+			log.Println("Watcher error:", err)
 		}
 	}
 }
@@ -101,7 +106,7 @@ func fetchLatestVideo(apiKey, channelID string) (string, string, error) {
 	}
 
 	var result YouTubeResponse
-	err = json.Unmarshal(body, &result)
+	err = yaml.Unmarshal(body, &result)
 	if err != nil {
 		return "", "", err
 	}
@@ -112,50 +117,80 @@ func fetchLatestVideo(apiKey, channelID string) (string, string, error) {
 		return title, videoID, nil
 	}
 
-	return "", "", fmt.Errorf("brak nowych filmów")
+	return "", "", fmt.Errorf("no new videos found")
+}
+
+func loadLastVideos(filename string) map[string]string {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		log.Println("No previous video history found, creating new one.")
+		return make(map[string]string)
+	}
+
+	var videos map[string]string
+	err = yaml.Unmarshal(data, &videos)
+	if err != nil {
+		log.Println("Error loading last videos file:", err)
+		return make(map[string]string)
+	}
+
+	return videos
+}
+
+func saveLastVideos(filename string, data map[string]string) {
+	jsonData, err := yaml.Marshal(data)
+	if err != nil {
+		log.Println("Error saving last videos:", err)
+		return
+	}
+
+	err = os.WriteFile(filename, jsonData, 0644)
+	if err != nil {
+		log.Println("Error writing last videos file:", err)
+	}
 }
 
 func main() {
 	var err error
-	config, err = loadConfig("config.json")
+	config, err = loadConfig(configFile)
 	if err != nil {
-		log.Fatalf("Nie udało się załadować konfiguracji: %v", err)
+		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
 	bot, err := tgbotapi.NewBotAPI(config.TelegramToken)
 	if err != nil {
-		log.Fatalf("Błąd połączenia z Telegram API: %v", err)
+		log.Fatalf("Error connecting to Telegram API: %v", err)
 	}
 
-	log.Printf("🤖 Bot zalogowany jako: %s", bot.Self.UserName)
+	log.Printf("🤖 Bot logged in as: %s", bot.Self.UserName)
 
 	ticker := time.NewTicker(10 * time.Minute)
 	defer ticker.Stop()
 
-	lastVideos = make(map[string]string)
+	lastVideos = loadLastVideos(lastVideosFile)
 
-	// Uruchomienie obserwowania zmian w pliku config.json
-	go watchConfig("config.json")
+	go watchConfig(configFile)
 
 	for range ticker.C {
 		for _, channel := range config.Channels {
 			title, videoID, err := fetchLatestVideo(config.YouTubeAPIKey, channel)
 			if err != nil {
-				log.Println("Błąd pobierania wideo:", err)
+				log.Println("Error fetching video:", err)
 				continue
 			}
 
 			if lastVideos[channel] != videoID {
-				msgText := fmt.Sprintf("🎬 Nowy film: *%s*\n🔗 [Obejrzyj na YouTube](https://www.youtube.com/watch?v=%s)", title, videoID)
+				msgText := fmt.Sprintf("🎬 New video: *%s*\n🔗 [Watch on YouTube](https://www.youtube.com/watch?v=%s)", title, videoID)
 				msg := tgbotapi.NewMessageToChannel(config.ChatID, msgText)
 				msg.ParseMode = "Markdown"
 
 				_, err := bot.Send(msg)
 				if err != nil {
-					log.Println("Błąd wysyłania wiadomości:", err)
+					log.Println("Error sending message:", err)
 				} else {
 					lastVideos[channel] = videoID
-					log.Printf("✅ Wysłano nowe powiadomienie: %s", title)
+					saveLastVideos(lastVideosFile, lastVideos)
+					log.Printf("✅ Sent new video notification: %s", title)
 				}
 			}
 		}

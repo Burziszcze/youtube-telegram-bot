@@ -7,7 +7,7 @@ A **Go-based** Telegram bot that monitors YouTube channels and sends notificatio
 ## 📌 Features
 ✅ Monitor multiple YouTube channels  
 ✅ Send notifications to Telegram with a link to the new video  
-✅ Automatically detect changes in `config.json` – no need to restart the bot  
+✅ Automatically detect changes in `config.yml` – no need to restart the bot  
 ✅ Run in **Docker**  
 
 ---
@@ -21,23 +21,21 @@ cd youtube-telegram-bot
 ```
 ---
 
-### 2️⃣ Configure config.json
-Create a config.json file and fill in the details:
+### 2️⃣ Configure config.yml
+Create a `config.yml` file and fill in the details:
 ```
-{
-    "telegram_token": "YOUR_TELEGRAM_BOT_TOKEN",
-    "chat_id": "YOUR_TELEGRAM_CHAT_ID",
-    "youtube_api_key": "YOUR_YOUTUBE_API_KEY",
-    "channels": [
-        "UC_x5XG1OV2P6uZZ5FSM9Ttw",
-        "UCHnyfMqiRRG1u-2MsSQLbXA"
-    ]
-}
+telegram_token: "YOUR_TELEGRAM_BOT_TOKEN"
+chat_id: "YOUR_TELEGRAM_CHAT_ID"
+youtube_api_key: "YOUR_YOUTUBE_API_KEY"
+channels:
+  - "UCe5Dq2HfS7IbF67qPnAuA5w"
+  - "UCrYZanw_GNn7Q1bzVQEetTw"
+  - "NEW_CHANNEL_ID"
 ```
-    telegram_token – Bot token from BotFather
-    chat_id – ID of the channel or group where the bot should send notifications
-    youtube_api_key – YouTube API key
-    channels – List of YouTube channels to monitor
+- telegram_token – Bot token from BotFather
+- chat_id – ID of the channel or group where the bot should send notifications
+- youtube_api_key – YouTube API key
+- channels – List of YouTube channels to monitor
 
 🔹 How to find chat_id? – Use the bot @get_id_bot.
 
@@ -72,8 +70,8 @@ Stop the bot
 
 To add new YouTube channels for monitoring:
 
-    Edit config.json
-    Save the file – the bot will automatically reload the new configuration!
+Edit `config.yml`
+Save the file – the bot will automatically reload the new configuration!
 
 ### 🔧 Troubleshooting
 
@@ -83,7 +81,7 @@ Check the logs:
 
     docker logs -f youtube-telegram-bot
 
-Ensure config.json is properly formatted
+Ensure `config.yml` is properly formatted
 Make sure the bot has access to the Telegram channel (it must be an admin)
 Verify that your YouTube API key is active
 

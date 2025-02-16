@@ -5,5 +5,5 @@ ADD . /youtube-telegram-bot
 WORKDIR /youtube-telegram-bot
 RUN go build -o youtube-telegram-bot .
 LABEL Name=youtube-telegram-bot Version=1.0.0
-COPY config.json /youtube-telegram-bot/config.json
+COPY config.yml /youtube-telegram-bot/config.yml
 CMD [ "./youtube-telegram-bot" ]

@@ -11,4 +11,4 @@ services:
     ports:
       - 2337:2337
     volumes:
-      - ./config.json:/youtube-telegram-bot/config.json
+      - ./config.yml:/youtube-telegram-bot/config.yml

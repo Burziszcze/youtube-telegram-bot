@@ -1,0 +1,7 @@
+telegram_token: "YOUR_TELEGRAM_BOT_TOKEN"
+chat_id: "YOUR_TELEGRAM_CHAT_ID"
+youtube_api_key: "YOUR_YOUTUBE_API_KEY"
+channels:
+  - "UCe5Dq2HfS7IbF67qPnAuA5w"
+  - "UCrYZanw_GNn7Q1bzVQEetTw"
+  - "NEW_CHANNEL_ID"
