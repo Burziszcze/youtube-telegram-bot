@@ -34,14 +34,13 @@ Create a config.json file and fill in the details:
         "UCHnyfMqiRRG1u-2MsSQLbXA"
     ]
 }
+    telegram_token – Bot token from BotFather
+    chat_id – ID of the channel or group where the bot should send notifications
+    youtube_api_key – YouTube API key
+    channels – List of YouTube channels to monitor
+
+    🔹 How to find chat_id? – Use the bot @get_id_bot.
 ```
-telegram_token – Bot token from BotFather
-chat_id – ID of the channel or group where the bot should send notifications
-youtube_api_key – YouTube API key
-channels – List of YouTube channels to monitor
-
-🔹 How to find chat_id? – Use the bot @get_id_bot.
-
 ---
 
 ### 🔧 Troubleshooting
@@ -63,5 +62,15 @@ Verify that your YouTube API key is active
 This project is licensed under the MIT License. Feel free to modify and share it.
 
 📬 If you have any questions, open an Issue or message me on Telegram! 🚀
+```yaml
 
 ---
+
+## 📝 **What’s included in this README?**
+✅ **Bot functionality overview**  
+✅ **Installation instructions** (Go and Docker)  
+✅ **Example `config.json`**  
+✅ **Troubleshooting and updating channels**  
+
+Now you can upload your bot to GitHub! 🚀🔥
+```
