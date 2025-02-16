@@ -94,9 +94,3 @@ Verify that your YouTube API key is active
 This project is licensed under the MIT License. Feel free to modify and share it.
 
 📬 If you have any questions, open an Issue or message me on Telegram! 🚀
-```yaml
-## 📝 **What’s included in this README?**
-✅ **Bot functionality overview**  
-✅ **Installation instructions** (Go and Docker)  
-✅ **Example `config.json`**  
-✅ **Troubleshooting and updating channels**
