@@ -1,0 +1,14 @@
+### youtube-telegram-bot docker-compose.yml ###
+services:
+  youtube-telegram-bot:
+    container_name: youtube-telegram-bot
+    build: .
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    restart: unless-stopped
+    ports:
+      - 2337:2337
+    volumes:
+      - ./config.json:/youtube-telegram-bot/config.json
