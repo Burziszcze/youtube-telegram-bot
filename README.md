@@ -23,9 +23,9 @@ cd youtube-telegram-bot
 
 ### 2️⃣ Configure config.yml
 Create a `config.yml` file and fill in the details:
-```
+```yml
 telegram_token: "YOUR_TELEGRAM_BOT_TOKEN"
-chat_id: "YOUR_TELEGRAM_CHAT_ID"
+chat_id: YOUR_TELEGRAM_CHAT_ID
 youtube_api_key: "YOUR_YOUTUBE_API_KEY"
 channels:
   - "UCe5Dq2HfS7IbF67qPnAuA5w"
@@ -39,6 +39,8 @@ channels:
 
 🔹 How to find chat_id? – Use the bot @get_id_bot.
 
+---
+
 ### 🚀 Running the Bot
 🏗️ Locally (Go)
 
@@ -49,6 +51,8 @@ Install dependencies:
 Run the bot:
 
     go run main.go
+
+---
 
 ### 🐳 Docker
 
@@ -65,6 +69,7 @@ Check logs
 Stop the bot
 
     docker-compose down
+---
 
 ### 🔄 Updating YouTube Channels
 
@@ -72,6 +77,8 @@ To add new YouTube channels for monitoring:
 
 Edit `config.yml`
 Save the file – the bot will automatically reload the new configuration!
+
+---
 
 ### 🔧 Troubleshooting
 
