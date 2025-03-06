@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
@@ -16,6 +18,17 @@ type Config struct {
 	ChatID        string   `yaml:"chat_id"`
 	YouTubeAPIKey string   `yaml:"youtube_api_key"`
 	Channels      []string `yaml:"channels"`
+}
+
+type YouTubeResponse struct {
+	Items []struct {
+		Snippet struct {
+			Title string `json:"title"`
+		} `json:"snippet"`
+		ID struct {
+			VideoID string `json:"videoId"`
+		} `json:"id"`
+	} `json:"items"`
 }
 
 var (
@@ -79,6 +92,64 @@ func watchConfig(filename string) {
 	}
 }
 
+func fetchLatestVideo(apiKey, channelID string) (string, string, error) {
+	url := fmt.Sprintf("https://www.googleapis.com/youtube/v3/search?key=%s&channelId=%s&part=snippet,id&order=date&maxResults=1&type=video", apiKey, channelID)
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", "", err
+	}
+
+	var result YouTubeResponse
+	err = yaml.Unmarshal(body, &result)
+	if err != nil {
+		return "", "", err
+	}
+
+	if len(result.Items) > 0 {
+		title := result.Items[0].Snippet.Title
+		videoID := result.Items[0].ID.VideoID
+		return title, videoID, nil
+	}
+
+	return "", "", fmt.Errorf("no new videos found")
+}
+
+func loadLastVideos(filename string) map[string]string {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		log.Println("No previous video history found, creating new one.")
+		return make(map[string]string)
+	}
+
+	var videos map[string]string
+	err = yaml.Unmarshal(data, &videos)
+	if err != nil {
+		log.Println("Error loading last videos file:", err)
+		return make(map[string]string)
+	}
+
+	return videos
+}
+
+func saveLastVideos(filename string, data map[string]string) {
+	jsonData, err := yaml.Marshal(data)
+	if err != nil {
+		log.Println("Error saving last videos:", err)
+		return
+	}
+
+	err = os.WriteFile(filename, jsonData, 0644)
+	if err != nil {
+		log.Println("Error writing last videos file:", err)
+	}
+}
+
 func main() {
 	var err error
 	config, err = loadConfig(configFile)
@@ -96,13 +167,13 @@ func main() {
 	ticker := time.NewTicker(10 * time.Minute)
 	defer ticker.Stop()
 
-	lastVideos = youtube.LoadLastVideos(lastVideosFile) // Użycie funkcji z nowego modułu
+	lastVideos = loadLastVideos(lastVideosFile)
 
 	go watchConfig(configFile)
 
 	for range ticker.C {
 		for _, channel := range config.Channels {
-			title, videoID, err := youtube.FetchLatestVideo(config.YouTubeAPIKey, channel) // Użycie funkcji z nowego modułu
+			title, videoID, err := fetchLatestVideo(config.YouTubeAPIKey, channel)
 			if err != nil {
 				log.Println("Error fetching video:", err)
 				continue
@@ -118,7 +189,7 @@ func main() {
 					log.Println("Error sending message:", err)
 				} else {
 					lastVideos[channel] = videoID
-					youtube.SaveLastVideos(lastVideosFile, lastVideos) // Użycie funkcji z nowego modułu
+					saveLastVideos(lastVideosFile, lastVideos)
 					log.Printf("✅ Sent new video notification: %s", title)
 				}
 			}
