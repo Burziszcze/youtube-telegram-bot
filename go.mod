@@ -1,4 +1,4 @@
-module github.com/Burziszcze/youtube-telegram-bot
+module gitlab.com/Burziszcze/youtube-telegram-bot
 
 go 1.22.1
 
